@@ -13,6 +13,7 @@ from albums.models import Album
 from albums.views import AlbumViewSet
 from rest_framework_datatables.django_filters.filters import (
     DatatablesFilterBackend,
+    DatatablesFilterSet
 )
 
 
@@ -36,7 +37,7 @@ class NumberYADCFDelimFilter(filters.RangeFilter):
         return super(NumberYADCFDelimFilter, self).filter(qs, r)
 
 
-class AlbumFilter(filters.FilterSet):
+class AlbumFilter(DatatablesFilterSet):
     year = NumberYADCFDelimFilter()
 
     class Meta:

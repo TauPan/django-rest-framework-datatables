@@ -1,10 +1,29 @@
 from rest_framework_datatables import filters
 from django_filters.rest_framework.backends import DjangoFilterBackend
+from django_filters.rest_framework.filterset import FilterSet
 from django_filters import utils
+
+
+class DatatablesFilterSet(FilterSet):
+
+    def __init__(self, data=None, queryset=None, *, request=None, prefix=None,
+                 datatables_query=None):
+        super().__init__(data=data, queryset=queryset,
+                         request=request, prefix=prefix)
+        self.datatables_query = datatables_query
+        # Propagate the datatables information to the filters:
+        for filter_ in self.filters.values():
+            filter_.datatables_query = next(
+                x for x
+                in datatables_query['fields']
+                if x['data'] == filter_.field_name
+            )
 
 
 class DatatablesFilterBackend(filters.DatatablesFilterBackend,
                               DjangoFilterBackend):
+
+    filterset_base = DatatablesFilterSet
 
     def filter_queryset(self, request, queryset, view):
         if request.accepted_renderer.format != 'datatables':
@@ -30,7 +49,8 @@ class DatatablesFilterBackend(filters.DatatablesFilterBackend,
         return {
             'data': query['form_fields'],
             'queryset': queryset,
-            'request': request
+            'request': request,
+            'datatables_query': query
         }
 
     def parse_query_params(self, request, view):
