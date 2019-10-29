@@ -16,21 +16,28 @@ from rest_framework_datatables.django_filter.filters import (
 )
 
 
-class NumberDashFilter(filters.RangeFilter):
+class NumberYADCFDelimFilter(filters.RangeFilter):
 
     field_class = forms.CharField
 
-    def filter(self, qs, value):
-        vals = value.split('-')
-        if len(vals) == 1:
-            r = range(int(vals[0]), int(vals[0]))
+    @staticmethod
+    def _int_or_none(v):
+        if v == "":
+            return None
         else:
-            r = range(int(vals[0]) or None, int(vals[1]) or None)
-        return super(NumberDashFilter, self).filter(qs, r)
+            return int(v)
+
+    def filter(self, qs, value):
+        vals = value.split('-yadcf_delim-')
+        if len(vals) == 1:
+            r = slice(int(vals[0]), int(vals[0]))
+        else:
+            r = slice(self._int_or_none(vals[0]), self._int_or_none(vals[1]))
+        return super(NumberYADCFDelimFilter, self).filter(qs, r)
 
 
 class AlbumFilter(filters.FilterSet):
-    year = NumberDashFilter()
+    year = NumberYADCFDelimFilter()
 
     class Meta:
         model = Album
@@ -52,7 +59,7 @@ class TestDjangoFilterBackend(TestCase):
 
     def test_range(self):
         response = self.client.get(
-            '/api/albumsfilter/?format=datatables&length=10&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]=1959-1965')
+            '/api/albumsfilter/?format=datatables&length=10&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]=1959-yadcf_delim-1965')
         expected = (3, 15)
         result = response.json()
         self.assertEquals((result['recordsFiltered'], result['recordsTotal']),
@@ -60,6 +67,39 @@ class TestDjangoFilterBackend(TestCase):
         self.assertEquals(
             set(x['name'] for x in result['data']),
             {'Kind of Blue', "Highway 61 Revisited", "Rubber Soul"})
+
+    def test_single(self):
+        response = self.client.get(
+            '/api/albumsfilter/?format=datatables&length=10&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]=1971')
+        expected = (1, 15)
+        result = response.json()
+        self.assertEquals((result['recordsFiltered'], result['recordsTotal']),
+                          expected)
+        self.assertEquals(
+            set(x['name'] for x in result['data']),
+            {"What's Going On"})
+
+    def test_start_range(self):
+        response = self.client.get(
+            '/api/albumsfilter/?format=datatables&length=10&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]=1979-yadcf_delim-')
+        expected = (1, 15)
+        result = response.json()
+        self.assertEquals((result['recordsFiltered'], result['recordsTotal']),
+                          expected)
+        self.assertEquals(
+            set(x['name'] for x in result['data']),
+            {'London Calling'})
+
+    def test_end_range(self):
+        response = self.client.get(
+            '/api/albumsfilter/?format=datatables&length=10&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]=-yadcf_delim-1959')
+        expected = (1, 15)
+        result = response.json()
+        self.assertEquals((result['recordsFiltered'], result['recordsTotal']),
+                          expected)
+        self.assertEquals(
+            set(x['name'] for x in result['data']),
+            {'Kind of Blue'})
 
 
 router = DefaultRouter()
