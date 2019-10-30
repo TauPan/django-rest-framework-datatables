@@ -9,7 +9,7 @@ from albums.views import get_album_options
 
 
 def index(request):
-    return render(request, 'albums/albums.html')
+    return render(request, 'albums_django_filters/albums.html')
 
 
 class AlbumViewSet(viewsets.ModelViewSet):
