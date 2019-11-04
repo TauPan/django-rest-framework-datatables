@@ -58,7 +58,7 @@ class TestDjangoFilterBackend(TestCase):
     def setUp(self):
         self.client = APIClient()
 
-    def test_range(self):
+    def test_column_range(self):
         response = self.client.get(
             '/api/albumsfilter/?format=datatables&length=10&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]=1959-yadcf_delim-1965')
         expected = (3, 15)
@@ -69,7 +69,7 @@ class TestDjangoFilterBackend(TestCase):
             set(x['name'] for x in result['data']),
             {'Kind of Blue', "Highway 61 Revisited", "Rubber Soul"})
 
-    def test_single(self):
+    def test_column_single(self):
         response = self.client.get(
             '/api/albumsfilter/?format=datatables&length=10&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]=1971')
         expected = (1, 15)
@@ -80,7 +80,7 @@ class TestDjangoFilterBackend(TestCase):
             set(x['name'] for x in result['data']),
             {"What's Going On"})
 
-    def test_start_range(self):
+    def test_column_start_range(self):
         response = self.client.get(
             '/api/albumsfilter/?format=datatables&length=10&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]=1979-yadcf_delim-')
         expected = (1, 15)
