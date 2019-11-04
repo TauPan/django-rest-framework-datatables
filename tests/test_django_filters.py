@@ -31,7 +31,11 @@ class NumberYADCFDelimFilter(filters.RangeFilter):
     def filter(self, qs, value):
         vals = value.split('-yadcf_delim-')
         if len(vals) == 1:
-            r = slice(int(vals[0]), int(vals[0]))
+            if vals[0]:
+                r = slice(self._int_or_none(vals[0]),
+                          self._int_or_none(vals[0]))
+            else:
+                r = None
         else:
             r = slice(self._int_or_none(vals[0]), self._int_or_none(vals[1]))
         return super(NumberYADCFDelimFilter, self).filter(qs, r)
