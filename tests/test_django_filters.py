@@ -13,11 +13,12 @@ from albums.models import Album
 from albums.views import AlbumViewSet
 from rest_framework_datatables.django_filters.filters import (
     DatatablesFilterBackend,
-    DatatablesFilterSet
+    DatatablesFilterSet,
+    GlobalFilterMixin
 )
 
 
-class NumberYADCFDelimFilter(filters.RangeFilter):
+class NumberYADCFDelimFilter(filters.RangeFilter, GlobalFilterMixin):
 
     field_class = forms.CharField
 

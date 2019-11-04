@@ -1,6 +1,7 @@
 from rest_framework_datatables import filters
 from django_filters.rest_framework.backends import DjangoFilterBackend
 from django_filters.rest_framework.filterset import FilterSet
+from django_filters.rest_framework.filters import CharFilter
 from django_filters import utils
 
 
@@ -18,6 +19,21 @@ class DatatablesFilterSet(FilterSet):
                 in datatables_query['fields']
                 if x['data'] == filter_.field_name
             )
+            filter_.search_value = datatables_query['search_value']
+
+
+class GlobalFilterMixin(CharFilter):
+
+    def filter(self, qs, value):
+        ret = super(GlobalFilterMixin, self).filter(
+                qs, value
+        )
+        search_value = getattr(self, 'search_value', None)
+        if search_value:
+            global_qs = super(GlobalFilterMixin, self).filter(
+                qs, search_value)
+            return ret and global_qs
+        return ret
 
 
 class DatatablesFilterBackend(filters.DatatablesFilterBackend,
