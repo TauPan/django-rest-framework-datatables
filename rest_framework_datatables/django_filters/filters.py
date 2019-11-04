@@ -30,10 +30,13 @@ class GlobalFilterMixin(CharFilter):
         )
         search_value = getattr(self, 'search_value', None)
         if search_value:
-            global_qs = super(GlobalFilterMixin, self).filter(
-                qs, search_value)
-            return ret and global_qs
+            return ret and self.filter_global(qs, search_value)
         return ret
+
+    def filter_global(self, qs, search_value):
+        if search_value:
+            return qs.filter(**{self.field_name + '__icontains': search_value})
+        return qs
 
 
 class DatatablesFilterBackend(filters.DatatablesFilterBackend,
