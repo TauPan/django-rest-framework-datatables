@@ -110,9 +110,21 @@ class TestDjangoFilterBackend(TestCase):
             set(x['name'] for x in result['data']),
             {'Kind of Blue'})
 
-    def test_global(self):
+    def test_global_number(self):
         response = self.client.get(
             '/api/albumsfilter/?format=datatables&length=10&search[value]=1959&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]='
+)
+        expected = (1, 15)
+        result = response.json()
+        self.assertEquals((result['recordsFiltered'], result['recordsTotal']),
+                          expected)
+        self.assertEquals(
+            set(x['name'] for x in result['data']),
+            {'Kind of Blue'})
+
+    def test_global_string(self):
+        response = self.client.get(
+            '/api/albumsfilter/?format=datatables&length=10&search[regex]=false&search[value]=blue&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]='
 )
         expected = (1, 15)
         result = response.json()
