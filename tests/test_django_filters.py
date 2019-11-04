@@ -22,23 +22,26 @@ class NumberYADCFDelimFilter(filters.RangeFilter):
     field_class = forms.CharField
 
     @staticmethod
-    def _int_or_none(v):
-        if v == "":
-            return None
-        else:
-            return int(v)
+    def _slice_or_none(v, delim='-'):
+
+        def _int_or_none(v):
+            if v == "":
+                return None
+            else:
+                return int(v)
+
+        vals = v.split(delim)
+        val0 = _int_or_none(vals[0])
+        if len(vals) == 2:  # one delimiter was in the string
+            return slice(val0, _int_or_none(vals[1]))
+        if len(vals) == 1 and vals[0]:  # it wasn't, but there was one value
+            return slice(val0, val0)
+        # empty string, multiple separators or other
+        return None
 
     def filter(self, qs, value):
-        vals = value.split('-yadcf_delim-')
-        if len(vals) == 1:
-            if vals[0]:
-                r = slice(self._int_or_none(vals[0]),
-                          self._int_or_none(vals[0]))
-            else:
-                r = None
-        else:
-            r = slice(self._int_or_none(vals[0]), self._int_or_none(vals[1]))
-        return super(NumberYADCFDelimFilter, self).filter(qs, r)
+        return super(NumberYADCFDelimFilter, self).filter(
+            qs, self._slice_or_none(value, '-yadcf_delim-'))
 
 
 class AlbumFilter(DatatablesFilterSet):
