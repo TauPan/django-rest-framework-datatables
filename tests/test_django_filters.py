@@ -111,7 +111,7 @@ class TestDjangoFilterBackend(TestCase):
 
     def test_global(self):
         response = self.client.get(
-            '/api/albumsfilter/?format=datatables&length=10&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=1959&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]='
+            '/api/albumsfilter/?format=datatables&length=10&search[value]=1959&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]='
 )
         expected = (1, 15)
         result = response.json()
