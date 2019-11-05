@@ -47,10 +47,11 @@ class NumberYADCFDelimFilter(filters.RangeFilter, GlobalFilterMixin):
 
 class AlbumFilter(DatatablesFilterSet):
     year = NumberYADCFDelimFilter()
+    name = GlobalFilterMixin()
 
     class Meta:
         model = Album
-        fields = ['year']
+        fields = ['year', 'name']
 
 
 class AlbumFilterViewSet(AlbumViewSet):
