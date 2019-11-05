@@ -26,7 +26,7 @@ class GlobalFilterMixin(CharFilter):
 
     def filter(self, qs, value):
         ret = super(GlobalFilterMixin, self).filter(
-                qs, value
+            qs, value
         )
         search_value = getattr(self, 'search_value', None)
         if search_value:
