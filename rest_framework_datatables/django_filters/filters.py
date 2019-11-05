@@ -30,7 +30,7 @@ class GlobalFilterMixin(CharFilter):
         )
         search_value = getattr(self, 'search_value', None)
         if search_value:
-            return ret and self.filter_global(qs, search_value)
+            return qs and (self.filter_global(qs, search_value) or ret)
         return ret
 
     def filter_global(self, qs, search_value):
