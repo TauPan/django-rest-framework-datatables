@@ -51,7 +51,8 @@ class GlobalRegexFilterMixin(GlobalFilterMixin):
         re_q = None
         if f_regex:
             if is_valid_regex(f_search_value):
-                re_q = qs.filter(**{self.field_name + '__iregex': f_search_value})
+                re_q = qs.filter(
+                    **{self.field_name + '__iregex': f_search_value})
         global_q = self.filter_global(
             qs,
             search_value,
@@ -68,9 +69,11 @@ class GlobalRegexFilterMixin(GlobalFilterMixin):
         if search_value:
             if search_regex:
                 if is_valid_regex(search_value):
-                    return qs.filter(**{self.field_name + '__iregex': search_value})
+                    return qs.filter(
+                        **{self.field_name + '__iregex': search_value})
             else:
-                return super(GlobalRegexFilterMixin, self).filter_global(qs, search_value)
+                return super(GlobalRegexFilterMixin, self).filter_global(
+                    qs, search_value)
         return qs
 
 
