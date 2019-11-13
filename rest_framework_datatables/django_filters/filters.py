@@ -45,17 +45,18 @@ class GlobalFilterMixin(CharFilter):
 class GlobalRegexFilterMixin(GlobalFilterMixin):
 
     def filter(self, qs, value):
-        f_regex = self.datatables_query['search_regex']
-        f_search_value = self.datatables_query['search_value']
+        f_regex = self.datatables_query.get('search_regex', False) is True
+        f_search_value = self.datatables_query.get('search_value', None)
+        search_value = getattr(self, 'search_value', None)
         re_q = None
         if f_regex:
             if is_valid_regex(f_search_value):
                 re_q = qs.filter(**{self.field_name + '__iregex': f_search_value})
         global_q = self.filter_global(
             qs,
-            getattr(self, 'search_value', None),
+            search_value,
             getattr(self, 'search_regex', False) is True)
-        if re_q and global_q:
+        if re_q and search_value:
             return qs and (global_q or re_q)
         if re_q:
             return re_q
