@@ -145,6 +145,17 @@ class TestDjangoFilterBackend(TestCase):
             set(x['name'] for x in result['data']),
             {'Kind of Blue'})
 
+    def test_column_regex(self):
+        response = self.client.get(
+            '/api/albumsfilter/?format=datatables&length=10&search[regex]=false&search[value]=&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=.*blue.*&columns[0][search][regex]=true&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]=')
+        expected = (1, 15)
+        result = response.json()
+        self.assertEquals((result['recordsFiltered'], result['recordsTotal']),
+                          expected)
+        self.assertEquals(
+            set(x['name'] for x in result['data']),
+            {'Kind of Blue'})
+
 
 router = DefaultRouter()
 router.register(r'^api/albumsfilter', AlbumFilterViewSet)
