@@ -14,7 +14,8 @@ from albums.views import AlbumViewSet
 from rest_framework_datatables.django_filters.filters import (
     DatatablesFilterBackend,
     DatatablesFilterSet,
-    GlobalFilterMixin
+    GlobalFilterMixin,
+    GlobalRegexFilterMixin
 )
 
 
@@ -47,7 +48,7 @@ class NumberYADCFDelimFilter(filters.RangeFilter, GlobalFilterMixin):
 
 class AlbumFilter(DatatablesFilterSet):
     year = NumberYADCFDelimFilter()
-    name = GlobalFilterMixin()
+    name = GlobalRegexFilterMixin()
 
     class Meta:
         model = Album
