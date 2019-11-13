@@ -4,6 +4,8 @@ from django_filters.rest_framework.filterset import FilterSet
 from django_filters.rest_framework.filters import CharFilter
 from django_filters import utils
 
+is_valid_regex = filters.is_valid_regex
+
 
 class DatatablesFilterSet(FilterSet):
 
@@ -20,6 +22,7 @@ class DatatablesFilterSet(FilterSet):
                 if x['data'] == filter_.field_name
             )
             filter_.search_value = datatables_query['search_value']
+            filter_.search_regex = datatables_query['search_regex']
 
 
 class GlobalFilterMixin(CharFilter):
@@ -36,6 +39,37 @@ class GlobalFilterMixin(CharFilter):
     def filter_global(self, qs, search_value):
         if search_value:
             return qs.filter(**{self.field_name + '__icontains': search_value})
+        return qs
+
+
+class GlobalRegexFilterMixin(GlobalFilterMixin):
+
+    def filter(self, qs, value):
+        f_regex = self.datatables_query['search_regex']
+        f_search_value = self.datatables_query['search_value']
+        re_q = None
+        if f_regex:
+            if is_valid_regex(f_search_value):
+                re_q = qs.filter(**{self.field_name + '__iregex': f_search_value})
+        global_q = self.filter_global(
+            qs,
+            getattr(self, 'search_value', None),
+            getattr(self, 'search_regex', False) is True)
+        if re_q and global_q:
+            return qs and (global_q or re_q)
+        if re_q:
+            return re_q
+        if global_q:
+            return global_q
+        return qs
+
+    def filter_global(self, qs, search_value, search_regex):
+        if search_value:
+            if search_regex:
+                if is_valid_regex(search_value):
+                    return qs.filter(**{self.field_name + '__iregex': search_value})
+            else:
+                return super(GlobalRegexFilterMixin, self).filter_global(qs, search_value)
         return qs
 
 
