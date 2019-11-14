@@ -179,6 +179,31 @@ class TestDjangoFilterBackend(TestCase):
             {'The Velvet Underground & Nico',
              'The Beatles (\"The White Album\")'})
 
+    def test_column_number_and_global_re(self):
+        response = self.client.get(
+            '/api/albumsfilter/?format=datatables&length=10&search[regex]=true&search[value]=(Nico|White)&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=&columns[0][search][regex]=false&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]=1967')
+        expected = (1, 15)
+        result = response.json()
+        self.assertEquals((result['recordsFiltered'], result['recordsTotal']),
+                          expected)
+        self.assertEquals(
+            set(x['name'] for x in result['data']),
+            {'The Velvet Underground & Nico'})
+
+    def test_global_number_re(self):
+        """The user types in a regex which is meant to match a number.
+
+        However the year field does not support regexes. In this case
+        we get no match. This must be communicated to the user, as we
+        can't magically support regex searches (which may be too
+        costly for some columns).
+        """
+        response = self.client.get(
+            '/api/albumsfilter/?format=datatables&length=10&search[regex]=true&search[value]=196[78]&columns[0][data]=name&columns[0][name]=name&columns[0][searchable]=true&columns[0][search][value]=&columns[0][search][regex]=false&columns[1][data]=year&columns[1][searchable]=true&columns[1][search][value]=')
+        expected = (0, 15)
+        result = response.json()
+        self.assertEquals((result['recordsFiltered'], result['recordsTotal']),
+                          expected)
 
 router = DefaultRouter()
 router.register(r'^api/albumsfilter', AlbumFilterViewSet)
