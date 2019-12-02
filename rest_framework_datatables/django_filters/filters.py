@@ -8,6 +8,15 @@ is_valid_regex = filters.is_valid_regex
 
 
 class DatatablesFilterSet(FilterSet):
+    """Basic FilterSet used by default in DatatablesFilterBackend (see below)
+
+    Datatables parameters are parsed and only the relevant parts are
+    stored as in the `datatables_query` attribute of every filter.
+
+    The complete information is available in the `datatables_query`
+    attribute of the FilterSet itself, which is available via the
+    `parent` attribute of the Filter.
+    """
 
     def __init__(self, data=None, queryset=None, *, request=None, prefix=None,
                  datatables_query=None):
@@ -27,6 +36,9 @@ class DatatablesFilterSet(FilterSet):
 
 class DatatablesFilterBackend(filters.DatatablesFilterBackend,
                               DjangoFilterBackend):
+    """Filter Backend for compatibility with DataTables *and* django-filters
+
+    """
 
     filterset_base = DatatablesFilterSet
 
@@ -69,6 +81,14 @@ class DatatablesFilterBackend(filters.DatatablesFilterBackend,
 
 
 class GlobalFilterMixin(CharFilter):
+    """Simple mixin for adding addition support for global search to a filter
+
+    The search filter for the column value is delegated to the
+    concrete filter class (which must come *first* in the declaration
+    of base classes) and the global search is simply a direct string
+    match.
+
+    """
 
     def filter(self, qs, value):
         ret = super(GlobalFilterMixin, self).filter(
@@ -86,6 +106,12 @@ class GlobalFilterMixin(CharFilter):
 
 
 class GlobalRegexFilterMixin(GlobalFilterMixin):
+    """Adds regex filtering in addition to global filtering to a filter
+    class.
+
+    The base filter class (if given) must come first in the
+    declaration of base classes.
+    """
 
     def filter(self, qs, value):
         f_regex = self.datatables_query.get('search_regex', False) is True
