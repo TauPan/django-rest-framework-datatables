@@ -1,8 +1,9 @@
-from rest_framework_datatables import filters
 from django_filters.rest_framework.backends import DjangoFilterBackend
 from django_filters.rest_framework.filterset import FilterSet
 from django_filters.rest_framework.filters import CharFilter
 from django_filters import utils
+
+from rest_framework_datatables import filters
 
 is_valid_regex = filters.is_valid_regex
 
