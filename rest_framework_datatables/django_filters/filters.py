@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from django_filters.rest_framework.backends import DjangoFilterBackend
 from django_filters.rest_framework.filterset import FilterSet
 from django_filters.rest_framework.filters import CharFilter
@@ -81,7 +83,31 @@ class DatatablesFilterBackend(filters.DatatablesFilterBackend,
         return query
 
 
-class GlobalFilterMixin(CharFilter):
+class ChainedQ(object):
+
+    def __get__(self, obj, type=None):
+        return getattr(obj.parent, '_chained_q_object', Q())
+
+    def __set__(self, obj, value):
+        return setattr(obj.parent, '_chained_q_object', value)
+
+
+class ChainedFilterMixin(object):
+
+    q = ChainedQ()
+
+    def filter(self, qs, value):
+        return qs.filter(self.chain_query(value))
+
+    def chain_query(self, value):
+        self.q &= self.filter_q(value)
+        return self.q
+
+    def filter_q(self, value):
+        return Q(**{'{}__{}'.format(self.field_name, self.lookup_expr): value})
+
+
+class GlobalFilterMixin(ChainedFilterMixin, CharFilter):
     """Simple mixin for adding addition support for global search to a filter
 
     The search filter for the column value is delegated to the
@@ -91,19 +117,13 @@ class GlobalFilterMixin(CharFilter):
 
     """
 
-    def filter(self, qs, value):
-        ret = super(GlobalFilterMixin, self).filter(
-            qs, value
-        )
-        search_value = getattr(self, 'search_value', None)
-        if search_value:
-            return qs and (self.filter_global(qs, search_value) or ret)
-        return ret
+    lookup_expr = 'icontains'
 
-    def filter_global(self, qs, search_value):
-        if search_value:
-            return qs.filter(**{self.field_name + '__icontains': search_value})
-        return qs
+    def chain_query(self, value):
+        search_value = getattr(self, 'search_value', None)
+        self.q |= self.filter_q(search_value)
+        self.q &= self.filter_q(value)
+        return self.q
 
 
 class GlobalRegexFilterMixin(GlobalFilterMixin):
@@ -114,34 +134,17 @@ class GlobalRegexFilterMixin(GlobalFilterMixin):
     declaration of base classes.
     """
 
-    def filter(self, qs, value):
+    lookup_expr = 'icontains'
+
+    def chain_query(self, value):
+        search_value = getattr(self, 'search_value', None)
+        search_regex = getattr(self, 'search_regex', False) is True
         f_regex = self.datatables_query.get('search_regex', False) is True
         f_search_value = self.datatables_query.get('search_value', None)
-        search_value = getattr(self, 'search_value', None)
-        re_q = None
-        if f_regex:
-            if is_valid_regex(f_search_value):
-                re_q = qs.filter(
-                    **{self.field_name + '__iregex': f_search_value})
-        global_q = self.filter_global(
-            qs,
-            search_value,
-            getattr(self, 'search_regex', False) is True)
-        if re_q and search_value:
-            return qs and (global_q or re_q)
-        if re_q:
-            return re_q
-        if global_q:
-            return global_q
-        return qs
-
-    def filter_global(self, qs, search_value, search_regex):
-        if search_value:
-            if search_regex:
-                if is_valid_regex(search_value):
-                    return qs.filter(
-                        **{self.field_name + '__iregex': search_value})
-            else:
-                return super(GlobalRegexFilterMixin, self).filter_global(
-                    qs, search_value)
-        return qs
+        self.q |= filters.f_search_q(self.datatables_query,
+                                     search_value,
+                                     search_regex)
+        self.q &= filters.f_search_q(self.datatables_query,
+                                     f_search_value,
+                                     f_regex)
+        return self.q
